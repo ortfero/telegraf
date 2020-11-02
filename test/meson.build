@@ -1,21 +1,31 @@
 project('telegraf-test', 'cpp',
-  license: 'MIT')
+  license: 'MIT',
+  default_options: [
+    'cpp_std=c++17'
+  ])
 
 inc_dirs = include_directories(
   '../include',
+  '../include/telegraf/bundled',
   '../thirdparty/include'
 )
 
-compiler = meson.get_compiler('cpp')
-deps = []
+mbedtls = dependency('mbedtls')
 
-if build_machine.system() == 'windows'
-  ws2_lib = compiler.find_library('ws2_32')
-  deps = [ws2_lib]
+deps = [mbedtls]
+
+system = host_machine.system()
+
+if system == 'windows'
+  cpp = meson.get_compiler('cpp')
+  ws2 = cpp.find_library('ws2_32', required:true)
+  deps += [ws2]
 endif
 
+exe = executable('telegraf-test', 'test.cpp',
+  include_directories: inc_dirs,
+  dependencies: deps
+) 
 
-executable('telegraf-test', 'test.cpp',
-  dependencies: deps,
-  include_directories: inc_dirs)
+test('telegraf-test', exe)
 
